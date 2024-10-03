@@ -59,6 +59,7 @@ const JokesPage = () => {
   const [editingJokeId, setEditingJokeId] = useState(null);
   const [editedJokeText, setEditedJokeText] = useState("");
   const [fetchedJokeIds, setFetchedJokeIds] = useState(new Set());
+  const [duplicateMessage, setDuplicateMessage] = useState("");
 
   useEffect(() => {
     dispatch(fetchCategories());
@@ -86,7 +87,13 @@ const JokesPage = () => {
 
   const handleSaveJoke = () => {
     if (currentJoke) {
-      dispatch(saveJoke(currentJoke));
+      const jokeExists = savedJokes.some((joke) => joke.id === currentJoke.id);
+      if (jokeExists) {
+        setDuplicateMessage("This joke is already saved!");
+      } else {
+        dispatch(saveJoke(currentJoke));
+        setDuplicateMessage("");
+      }
     }
   };
 
@@ -131,6 +138,7 @@ const JokesPage = () => {
   };
 
   const handleGetJoke = () => {
+    setDuplicateMessage("");
     if (selectedCategories.length > 0) {
       fetchUniqueJokeByCategory(selectedCategories[0]);
     } else {
@@ -191,10 +199,14 @@ const JokesPage = () => {
           <Button variant="outlined" onClick={handleSaveJoke}>
             Save Joke
           </Button>
+          {duplicateMessage && (
+            <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+              {duplicateMessage}
+            </Typography>
+          )}
         </>
       )}
-
-      <Typography variant="h5" gutterBottom>
+      <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
         Saved Jokes
       </Typography>
       <TableContainer component={Paper}>
