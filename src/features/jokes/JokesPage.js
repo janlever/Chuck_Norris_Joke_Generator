@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchRandomJoke,
@@ -66,7 +66,7 @@ const JokesPage = () => {
     fetchUniqueJoke();
   }, [dispatch]);
 
-  const fetchUniqueJoke = async () => {
+  const fetchUniqueJoke = useCallback(async () => {
     let jokeFetched = false;
     let attempts = 0;
     const maxAttempts = 10;
@@ -83,9 +83,9 @@ const JokesPage = () => {
     if (!jokeFetched) {
       alert("No more unique jokes available.");
     }
-  };
+  }, [dispatch, fetchedJokeIds]);
 
-  const handleSaveJoke = () => {
+  const handleSaveJoke = useCallback(() => {
     if (currentJoke) {
       const jokeExists = savedJokes.some((joke) => joke.id === currentJoke.id);
       if (jokeExists) {
@@ -95,56 +95,65 @@ const JokesPage = () => {
         setDuplicateMessage("");
       }
     }
-  };
+  }, [currentJoke, savedJokes, dispatch]);
 
-  const handleDeleteJoke = (id) => {
-    dispatch(deleteJoke(id));
-  };
+  const handleDeleteJoke = useCallback(
+    (id) => {
+      dispatch(deleteJoke(id));
+    },
+    [dispatch]
+  );
 
-  const handleEditJoke = (id, value) => {
-    dispatch(editJoke({ id, value }));
-    setEditingJokeId(null);
-  };
+  const handleEditJoke = useCallback(
+    (id, value) => {
+      dispatch(editJoke({ id, value }));
+      setEditingJokeId(null);
+    },
+    [dispatch]
+  );
 
-  const handleEditButtonClick = (joke) => {
+  const handleEditButtonClick = useCallback((joke) => {
     setEditingJokeId(joke.id);
     setEditedJokeText(joke.value);
-  };
+  }, []);
 
-  const handleCategoryChange = (event) => {
+  const handleCategoryChange = useCallback((event) => {
     const {
       target: { value },
     } = event;
     setSelectedCategories(typeof value === "string" ? value.split(",") : value);
-  };
+  }, []);
 
-  const fetchUniqueJokeByCategory = async (category) => {
-    let jokeFetched = false;
-    let attempts = 0;
-    const maxAttempts = 10;
+  const fetchUniqueJokeByCategory = useCallback(
+    async (category) => {
+      let jokeFetched = false;
+      let attempts = 0;
+      const maxAttempts = 10;
 
-    while (!jokeFetched && attempts < maxAttempts) {
-      const result = await dispatch(fetchJokeByCategory(category)).unwrap();
-      if (!fetchedJokeIds.has(result.id)) {
-        setFetchedJokeIds((prevIds) => new Set(prevIds).add(result.id));
-        jokeFetched = true;
+      while (!jokeFetched && attempts < maxAttempts) {
+        const result = await dispatch(fetchJokeByCategory(category)).unwrap();
+        if (!fetchedJokeIds.has(result.id)) {
+          setFetchedJokeIds((prevIds) => new Set(prevIds).add(result.id));
+          jokeFetched = true;
+        }
+        attempts++;
       }
-      attempts++;
-    }
 
-    if (!jokeFetched) {
-      alert("No more unique jokes available in this category.");
-    }
-  };
+      if (!jokeFetched) {
+        alert("No more unique jokes available in this category.");
+      }
+    },
+    [dispatch, fetchedJokeIds]
+  );
 
-  const handleGetJoke = () => {
+  const handleGetJoke = useCallback(() => {
     setDuplicateMessage("");
     if (selectedCategories.length > 0) {
       fetchUniqueJokeByCategory(selectedCategories[0]);
     } else {
       fetchUniqueJoke();
     }
-  };
+  }, [selectedCategories, fetchUniqueJokeByCategory, fetchUniqueJoke]);
 
   if (loading === "pending") {
     return <Typography>Loading...</Typography>;
