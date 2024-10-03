@@ -8,13 +8,54 @@ import {
   deleteJoke,
   editJoke,
 } from "./jokeSlice";
+import {
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  OutlinedInput,
+  TextField,
+} from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import DeleteIcon from "@mui/icons-material/Delete";
+import SaveIcon from "@mui/icons-material/Save";
+import EditIcon from "@mui/icons-material/Edit";
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
+
+function getStyles(name, selectedCategories, theme) {
+  return {
+    fontWeight: selectedCategories.includes(name)
+      ? theme.typography.fontWeightMedium
+      : theme.typography.fontWeightRegular,
+  };
+}
 
 const JokesPage = () => {
   const dispatch = useDispatch();
+  const theme = useTheme();
   const { currentJoke, savedJokes, categories, loading, error } = useSelector(
     (state) => state.jokes
   );
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState([]);
   const [editingJokeId, setEditingJokeId] = useState(null);
   const [editedJokeText, setEditedJokeText] = useState("");
   const [fetchedJokeIds, setFetchedJokeIds] = useState(new Set());
@@ -64,13 +105,10 @@ const JokesPage = () => {
   };
 
   const handleCategoryChange = (event) => {
-    const category = event.target.value;
-    setSelectedCategory(category);
-    if (category) {
-      fetchUniqueJokeByCategory(category);
-    } else {
-      fetchUniqueJoke();
-    }
+    const {
+      target: { value },
+    } = event;
+    setSelectedCategories(typeof value === "string" ? value.split(",") : value);
   };
 
   const fetchUniqueJokeByCategory = async (category) => {
@@ -93,83 +131,131 @@ const JokesPage = () => {
   };
 
   const handleGetJoke = () => {
-    if (selectedCategory) {
-      fetchUniqueJokeByCategory(selectedCategory);
+    if (selectedCategories.length > 0) {
+      fetchUniqueJokeByCategory(selectedCategories[0]);
     } else {
       fetchUniqueJoke();
     }
   };
 
   if (loading === "pending") {
-    return <div>Loading...</div>;
+    return <Typography>Loading...</Typography>;
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <Typography>Error: {error}</Typography>;
   }
 
   return (
     <div>
-      <h1>Press the button below to get a random Chuck Norris joke:</h1>
-      <button onClick={handleGetJoke}>Get Random Joke</button>
-      <select value={selectedCategory} onChange={handleCategoryChange}>
-        <option value="">Select Category</option>
-        {categories.map((category) => (
-          <option key={category} value={category}>
-            {category}
-          </option>
-        ))}
-      </select>
+      <Typography variant="h4" gutterBottom>
+        Press the button below to get a random Chuck Norris joke:
+      </Typography>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <Button
+          size="large"
+          variant="contained"
+          color="primary"
+          onClick={handleGetJoke}
+        >
+          Get Random Joke
+        </Button>
+        <FormControl sx={{ m: 1, width: 250 }}>
+          <InputLabel id="category-select-label">Select Category</InputLabel>
+          <Select
+            labelId="category-select-label"
+            id="category-select"
+            multiple
+            value={selectedCategories}
+            onChange={handleCategoryChange}
+            input={<OutlinedInput label="Select Category" />}
+            MenuProps={MenuProps}
+          >
+            {categories.map((category) => (
+              <MenuItem
+                key={category}
+                value={category}
+                style={getStyles(category, selectedCategories, theme)}
+              >
+                {category}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </div>
       {currentJoke && (
         <>
-          <p>{currentJoke.value}</p>
-          <button onClick={handleSaveJoke}>Save Joke</button>
+          <Typography variant="body1" gutterBottom>
+            {currentJoke.value}
+          </Typography>
+          <Button variant="outlined" onClick={handleSaveJoke}>
+            Save Joke
+          </Button>
         </>
       )}
-      <h2>Saved Jokes</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Joke</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {savedJokes.map((joke) => (
-            <tr key={joke.id}>
-              <td>{joke.id}</td>
-              <td>
-                {editingJokeId === joke.id ? (
-                  <input
-                    type="text"
-                    value={editedJokeText}
-                    onChange={(e) => setEditedJokeText(e.target.value)}
-                  />
-                ) : (
-                  joke.value
-                )}
-              </td>
-              <td>
-                {editingJokeId === joke.id ? (
-                  <button
-                    onClick={() => handleEditJoke(joke.id, editedJokeText)}
+
+      <Typography variant="h5" gutterBottom>
+        Saved Jokes
+      </Typography>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Joke</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {savedJokes.map((joke) => (
+              <TableRow key={joke.id}>
+                <TableCell>{joke.id}</TableCell>
+                <TableCell>
+                  {editingJokeId === joke.id ? (
+                    <TextField
+                      id="outlined-multiline-flexible"
+                      label="Edit Joke"
+                      multiline
+                      value={editedJokeText}
+                      onChange={(e) => setEditedJokeText(e.target.value)}
+                      fullWidth
+                    />
+                  ) : (
+                    joke.value
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editingJokeId === joke.id ? (
+                    <Button
+                      variant="contained"
+                      startIcon={<SaveIcon />}
+                      onClick={() => handleEditJoke(joke.id, editedJokeText)}
+                    >
+                      Save
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outlined"
+                      startIcon={<EditIcon />}
+                      onClick={() => handleEditButtonClick(joke)}
+                    >
+                      Edit
+                    </Button>
+                  )}
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<DeleteIcon />}
+                    onClick={() => handleDeleteJoke(joke.id)}
                   >
-                    Save
-                  </button>
-                ) : (
-                  <button onClick={() => handleEditButtonClick(joke)}>
-                    Edit
-                  </button>
-                )}
-                <button onClick={() => handleDeleteJoke(joke.id)}>
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                    Delete
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </div>
   );
 };
