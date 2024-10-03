@@ -8,12 +8,12 @@ const Navbar = ({ logoText }) => {
       <h1 className="logo">{logoText}</h1>
       <ul>
         <li>
-          <NavLink to="/" className="navbar-link" activeClassName="active">
+          <NavLink to="/" className="navbar-link" activeclassname="active">
             Jokes
           </NavLink>
         </li>
         <li>
-          <NavLink to="/about" className="navbar-link" activeClassName="active">
+          <NavLink to="/about" className="navbar-link" activeclassname="active">
             About Me
           </NavLink>
         </li>
