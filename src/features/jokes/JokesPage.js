@@ -60,6 +60,8 @@ const JokesPage = () => {
   const [editedJokeText, setEditedJokeText] = useState("");
   const [fetchedJokeIds, setFetchedJokeIds] = useState(new Set());
   const [duplicateMessage, setDuplicateMessage] = useState("");
+  //  const [joke, setJoke] = useState("");
+  //const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     dispatch(fetchCategories());
@@ -67,6 +69,7 @@ const JokesPage = () => {
   }, [dispatch]);
 
   const fetchUniqueJoke = useCallback(async () => {
+    //setLoading(true);
     let jokeFetched = false;
     let attempts = 0;
     const maxAttempts = 10;
@@ -76,6 +79,7 @@ const JokesPage = () => {
       if (!fetchedJokeIds.has(result.id)) {
         setFetchedJokeIds((prevIds) => new Set(prevIds).add(result.id));
         jokeFetched = true;
+        //  setLoading(false);
       }
       attempts++;
     }
@@ -155,13 +159,13 @@ const JokesPage = () => {
     }
   }, [selectedCategories, fetchUniqueJokeByCategory, fetchUniqueJoke]);
 
-  if (loading === "pending") {
-    return <Typography>Loading...</Typography>;
-  }
+  // if (loading === "pending") {
+  //   return <Typography>Loading...</Typography>;
+  // }
 
-  if (error) {
-    return <Typography>Error: {error}</Typography>;
-  }
+  // if (error) {
+  //   return <Typography>Error: {error}</Typography>;
+  // }
 
   return (
     <div>
@@ -200,21 +204,30 @@ const JokesPage = () => {
           </Select>
         </FormControl>
       </div>
-      {currentJoke && (
-        <>
+      {error ? (
+        <Typography variant="body1" color="error" gutterBottom>
+          Error: {error}
+        </Typography>
+      ) : loading === "pending" ? (
+        <Typography variant="body1" gutterBottom>
+          Loading...
+        </Typography>
+      ) : (
+        currentJoke && (
           <Typography variant="body1" gutterBottom>
             {currentJoke.value}
           </Typography>
-          <Button variant="outlined" onClick={handleSaveJoke}>
-            Save Joke
-          </Button>
-          {duplicateMessage && (
-            <Typography variant="body2" color="error" sx={{ mt: 1 }}>
-              {duplicateMessage}
-            </Typography>
-          )}
-        </>
+        )
       )}
+      <Button variant="outlined" onClick={handleSaveJoke}>
+        Save Joke
+      </Button>
+      {duplicateMessage && (
+        <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+          {duplicateMessage}
+        </Typography>
+      )}
+
       <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
         Saved Jokes
       </Typography>
