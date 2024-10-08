@@ -191,7 +191,7 @@ const JokesPage = () => {
           <Select
             labelId="category-select-label"
             id="category-select"
-            multiple
+            single
             value={selectedCategories}
             onChange={handleCategoryChange}
             input={<OutlinedInput label="Select Category" />}
