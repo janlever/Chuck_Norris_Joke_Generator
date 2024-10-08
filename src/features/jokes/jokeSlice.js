@@ -1,10 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
+const API_BASE = "https://api.chucknorris.io/jokes";
+
 export const fetchRandomJoke = createAsyncThunk(
   "jokes/fetchRandomJoke",
   async () => {
-    const response = await axios.get("https://api.chucknorris.io/jokes/random");
+    const response = await axios.get(`${API_BASE}/random`);
     return response.data;
   }
 );
@@ -12,9 +14,7 @@ export const fetchRandomJoke = createAsyncThunk(
 export const fetchJokeByCategory = createAsyncThunk(
   "jokes/fetchJokeByCategory",
   async (category) => {
-    const response = await axios.get(
-      `https://api.chucknorris.io/jokes/random?category=${category}`
-    );
+    const response = await axios.get(`${API_BASE}/random?category=${category}`);
     return response.data;
   }
 );
@@ -22,9 +22,7 @@ export const fetchJokeByCategory = createAsyncThunk(
 export const fetchCategories = createAsyncThunk(
   "jokes/fetchCategories",
   async () => {
-    const response = await axios.get(
-      "https://api.chucknorris.io/jokes/categories"
-    );
+    const response = await axios.get(`${API_BASE}/categories`);
     return response.data;
   }
 );
@@ -35,7 +33,7 @@ const jokeSlice = createSlice({
     currentJoke: null,
     savedJokes: [],
     categories: [],
-    loading: "idle",
+    loading: false,
     error: null,
   },
   reducers: {
@@ -60,29 +58,39 @@ const jokeSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchRandomJoke.pending, (state) => {
-        state.loading = "pending";
+        state.loading = true;
       })
       .addCase(fetchRandomJoke.fulfilled, (state, action) => {
-        state.loading = "succeeded";
+        state.loading = false;
         state.currentJoke = action.payload;
       })
       .addCase(fetchRandomJoke.rejected, (state, action) => {
-        state.loading = "failed";
+        state.loading = false;
         state.error = action.error.message;
       })
       .addCase(fetchJokeByCategory.pending, (state) => {
-        state.loading = "pending";
+        state.loading = true;
+        state.error = null;
       })
       .addCase(fetchJokeByCategory.fulfilled, (state, action) => {
-        state.loading = "succeeded";
+        state.loading = true;
         state.currentJoke = action.payload;
       })
       .addCase(fetchJokeByCategory.rejected, (state, action) => {
-        state.loading = "failed";
+        state.loading = false;
         state.error = action.error.message;
       })
+      .addCase(fetchCategories.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchCategories.fulfilled, (state, action) => {
+        state.loading = false;
         state.categories = action.payload;
+      })
+      .addCase(fetchCategories.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
       });
   },
 });
