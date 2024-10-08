@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchRandomJoke,
@@ -58,15 +58,16 @@ const JokesPage = () => {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [editingJokeId, setEditingJokeId] = useState(null);
   const [editedJokeText, setEditedJokeText] = useState("");
-  const [fetchedJokeIds, setFetchedJokeIds] = useState(new Set());
+  // const [fetchedJokeIds, setFetchedJokeIds] = useState(new Set());
+  const fetchedJokeIds = useRef(new Set());
   const [duplicateMessage, setDuplicateMessage] = useState("");
   //  const [joke, setJoke] = useState("");
   //const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  /* useEffect(() => {
     dispatch(fetchCategories());
     fetchUniqueJoke();
-  }, [dispatch]);
+  }, [dispatch, fetchUniqueJoke]); */
 
   const fetchUniqueJoke = useCallback(async () => {
     //setLoading(true);
@@ -76,10 +77,9 @@ const JokesPage = () => {
 
     while (!jokeFetched && attempts < maxAttempts) {
       const result = await dispatch(fetchRandomJoke()).unwrap();
-      if (!fetchedJokeIds.has(result.id)) {
-        setFetchedJokeIds((prevIds) => new Set(prevIds).add(result.id));
+      if (!fetchedJokeIds.current.has(result.id)) {
+        fetchedJokeIds.current.add(result.id);
         jokeFetched = true;
-        //  setLoading(false);
       }
       attempts++;
     }
@@ -88,6 +88,11 @@ const JokesPage = () => {
       alert("No more unique jokes available.");
     }
   }, [dispatch, fetchedJokeIds]);
+
+  useEffect(() => {
+    dispatch(fetchCategories());
+    fetchUniqueJoke();
+  }, [dispatch, fetchUniqueJoke]);
 
   const handleSaveJoke = useCallback(() => {
     if (currentJoke) {
@@ -136,8 +141,8 @@ const JokesPage = () => {
 
       while (!jokeFetched && attempts < maxAttempts) {
         const result = await dispatch(fetchJokeByCategory(category)).unwrap();
-        if (!fetchedJokeIds.has(result.id)) {
-          setFetchedJokeIds((prevIds) => new Set(prevIds).add(result.id));
+        if (!fetchedJokeIds.current.has(result.id)) {
+          fetchedJokeIds.current.add(result.id);
           jokeFetched = true;
         }
         attempts++;
@@ -147,7 +152,7 @@ const JokesPage = () => {
         alert("No more unique jokes available in this category.");
       }
     },
-    [dispatch, fetchedJokeIds]
+    [dispatch]
   );
 
   const handleGetJoke = useCallback(() => {
